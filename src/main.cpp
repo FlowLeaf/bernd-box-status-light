@@ -5,23 +5,52 @@
 const char *ssid = "PROTOHAUS";         //replace this with your WiFi network name
 const char *password = "PH-Wlan-2016#"; //replace this with your WiFi network password
 const char *mqtt_client_id = "bernd_box_status_light_1";
-const char *mqtt_measurement_report_active_topic = "tele/bernd_box_1/measurement_report_active";
+const char *measurement_report_active_topic = "tele/bernd_box_1/measurement_report_active";
+const char *pump_active_topic = "tele/bernd_box_1/pump_active";
 
 int status_led_pin = 2;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void measurement_report_active_callback(bool)
+{
+  Serial.println("measurement_report_active_callback");
+}
+
+void pump_active_callback(bool)
+{
+  Serial.println("pump_active_callback");
+}
+
+void callback(char *topic, byte *payload, unsigned int length)
+{
   Serial.printf("Message arraived [%s]", topic);
 
+  bool active;
+
   char received = (char)payload[0];
-  if(received == 't' || received == 'T') {
+  if (received == 't' || received == 'T')
+  {
     Serial.println("Got a T");
-    digitalWrite(status_led_pin, HIGH);
-  } else {
-    Serial.println("Got a not T");
+    // LED output is inverter
     digitalWrite(status_led_pin, LOW);
+    active = true;
+  }
+  else
+  {
+    Serial.println("Got a not T");
+    // LED output is inverter
+    digitalWrite(status_led_pin, LOW);
+  }
+
+  if (strcmp(measurement_report_active_topic, topic) == 0)
+  {
+    measurement_report_active_callback(active);
+  }
+  if (strcmp(pump_active_topic, topic) == 0)
+  {
+    pump_active_callback(active);
   }
 }
 
@@ -33,7 +62,9 @@ void reconnect()
     if (mqttClient.connect(mqtt_client_id))
     {
       mqttClient.subscribe(mqtt_measurement_report_active_topic);
-    } else {
+    }
+    else
+    {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
       Serial.println(" trying again in 5 seconds");
