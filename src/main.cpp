@@ -33,15 +33,15 @@ void callback(char *topic, byte *payload, unsigned int length)
   if (received == 't' || received == 'T')
   {
     Serial.println("Got a T");
-    // LED output is inverter
+    // LED output is inverted
     digitalWrite(status_led_pin, LOW);
     active = true;
   }
   else
   {
     Serial.println("Got a not T");
-    // LED output is inverter
-    digitalWrite(status_led_pin, LOW);
+    // LED output is inverted
+    digitalWrite(status_led_pin, HIGH);
   }
 
   if (strcmp(measurement_report_active_topic, topic) == 0)
@@ -61,7 +61,8 @@ void reconnect()
     Serial.print("Attempting MQTT connection...");
     if (mqttClient.connect(mqtt_client_id))
     {
-      mqttClient.subscribe(mqtt_measurement_report_active_topic);
+      mqttClient.subscribe(measurement_report_active_topic);
+      mqttClient.subscribe(pump_active_topic);
     }
     else
     {
